@@ -3,24 +3,12 @@ import { Card } from "@/components/ui/Card";
 import { LoginForm } from "@/components/LoginForm";
 import { HeroPanel } from "@/components/HeroPanel";
 import { Footer } from "@/components/Footer";
-import { prisma } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
-
-export default async function LoginPage() {
-  const students = await prisma.student
-    .findMany({
-      take: 5,
-      orderBy: { createdAt: "asc" },
-      select: { name: true },
-    })
-    .catch(() => []);
-  const studentNames = students.map((s) => s.name);
-
+export default function LoginPage() {
   return (
     <div className="flex min-h-dvh flex-col lg:flex-row">
       <div className="lg:w-1/2">
-        <HeroPanel studentNames={studentNames} />
+        <HeroPanel />
       </div>
 
       <main className="flex flex-1 flex-col items-center justify-center px-4 py-10 sm:px-6 lg:w-1/2">

@@ -48,7 +48,6 @@ export function LoginForm() {
           id="loginId"
           name="loginId"
           autoComplete="username"
-          autoFocus
           value={loginId}
           onChange={(e) => setLoginId(e.target.value)}
           required
