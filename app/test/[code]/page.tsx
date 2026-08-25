@@ -21,6 +21,12 @@ export default async function TestSubmissionPage({
   const status = getTestStatus(test.startTime, test.endTime);
   const session = await getSession();
 
+  let wrongSection = false;
+  if (test.section && session?.role === "STUDENT") {
+    const student = await prisma.student.findUnique({ where: { id: session.sub } });
+    wrongSection = !student || student.section !== test.section;
+  }
+
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="flex items-center justify-between border-b border-border bg-card px-4 py-4 sm:px-6">
@@ -48,32 +54,43 @@ export default async function TestSubmissionPage({
             </p>
           </div>
           <div className="p-6">
-            {status === "live" && <SubmitTestForm testCode={test.code} />}
-            {status === "upcoming" && (
+            {wrongSection ? (
               <div className="flex flex-col items-center gap-2 py-6 text-center">
-                <p className="font-semibold text-foreground">This test isn&apos;t open yet</p>
+                <p className="font-semibold text-foreground">This test isn&apos;t for your section</p>
                 <p className="text-sm text-muted-foreground">
-                  Opens{" "}
-                  {test.startTime.toLocaleString("en-GB", {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  })}
-                  . Come back then.
+                  Contact your teacher if you think this is a mistake.
                 </p>
               </div>
-            )}
-            {status === "ended" && (
-              <div className="flex flex-col items-center gap-2 py-6 text-center">
-                <p className="font-semibold text-foreground">This test is closed</p>
-                <p className="text-sm text-muted-foreground">
-                  It closed{" "}
-                  {test.endTime.toLocaleString("en-GB", {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  })}
-                  . Contact your teacher if you still need to submit.
-                </p>
-              </div>
+            ) : (
+              <>
+                {status === "live" && <SubmitTestForm testCode={test.code} />}
+                {status === "upcoming" && (
+                  <div className="flex flex-col items-center gap-2 py-6 text-center">
+                    <p className="font-semibold text-foreground">This test isn&apos;t open yet</p>
+                    <p className="text-sm text-muted-foreground">
+                      Opens{" "}
+                      {test.startTime.toLocaleString("en-GB", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
+                      . Come back then.
+                    </p>
+                  </div>
+                )}
+                {status === "ended" && (
+                  <div className="flex flex-col items-center gap-2 py-6 text-center">
+                    <p className="font-semibold text-foreground">This test is closed</p>
+                    <p className="text-sm text-muted-foreground">
+                      It closed{" "}
+                      {test.endTime.toLocaleString("en-GB", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
+                      . Contact your teacher if you still need to submit.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </Card>

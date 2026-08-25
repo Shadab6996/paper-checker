@@ -15,9 +15,15 @@ const SKY: Record<Theme, string> = {
   day: "linear-gradient(180deg, #4fa8e8 0%, #8ecdfb 45%, #ffe3b0 100%)",
 };
 
-const QUOTE = "The best answer sheet is the one that actually gets submitted.";
+const DEFAULT_QUOTE = "The best answer sheet is the one that actually gets submitted.";
 
-export function HeroPanel({ studentNames = [] }: { studentNames?: string[] }) {
+export function HeroPanel({
+  studentNames = [],
+  quote = DEFAULT_QUOTE,
+}: {
+  studentNames?: string[];
+  quote?: string;
+}) {
   const [theme, setTheme] = useState<Theme>("night");
   const isDay = theme === "day";
 
@@ -71,7 +77,7 @@ export function HeroPanel({ studentNames = [] }: { studentNames?: string[] }) {
             isDay ? "text-slate-600" : "text-white/50"
           }`}
         >
-          &ldquo;{QUOTE}&rdquo;
+          &ldquo;{quote}&rdquo;
         </p>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { getBaseUrl } from "@/lib/url";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { CopyLinkBox } from "@/components/admin/CopyLinkBox";
+import { TestDocuments } from "@/components/admin/TestDocuments";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { getTestStatus } from "@/lib/testStatus";
 
@@ -34,6 +35,7 @@ export default async function TestDetailPage({
         </div>
         <p className="text-sm text-muted-foreground">
           {test.subject} · {test.chapterName}
+          {test.section && ` · Section ${test.section}`}
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
           Opens {test.startTime.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}
@@ -51,6 +53,18 @@ export default async function TestDetailPage({
           Share this with students (e.g. via WhatsApp). Opening it takes them
           straight to the upload page for this test.
         </p>
+      </Card>
+
+      <Card className="flex flex-col gap-3 p-6">
+        <h2 className="text-sm font-semibold text-foreground">Test documents</h2>
+        <p className="text-xs text-muted-foreground">
+          For your own reference — not shown to students.
+        </p>
+        <TestDocuments
+          testCode={test.code}
+          initialQuestionPaperPath={test.questionPaperPath}
+          initialAnswerKeyPath={test.answerKeyPath}
+        />
       </Card>
 
       <div className="flex items-center justify-between gap-4">

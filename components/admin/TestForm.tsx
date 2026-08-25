@@ -21,6 +21,7 @@ export function TestForm() {
   const [name, setName] = useState("");
   const [subject, setSubject] = useState("");
   const [chapterName, setChapterName] = useState("");
+  const [section, setSection] = useState<"ALL" | "A" | "B">("ALL");
   const [startTime, setStartTime] = useState(toLocalInputValue(defaultStart));
   const [endTime, setEndTime] = useState(toLocalInputValue(defaultEnd));
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +45,7 @@ export function TestForm() {
           name: name.trim(),
           subject: subject.trim(),
           chapterName: chapterName.trim(),
+          section,
           startTime: new Date(startTime).toISOString(),
           endTime: new Date(endTime).toISOString(),
         }),
@@ -94,6 +96,24 @@ export function TestForm() {
           onChange={(e) => setChapterName(e.target.value)}
           required
         />
+      </Field>
+
+      <Field
+        label="Section"
+        htmlFor="section"
+        required
+        hint="Restrict this test to one section, or leave open to everyone"
+      >
+        <select
+          id="section"
+          value={section}
+          onChange={(e) => setSection(e.target.value as "ALL" | "A" | "B")}
+          className="min-h-11 w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-base text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <option value="ALL">All sections</option>
+          <option value="A">Section A only</option>
+          <option value="B">Section B only</option>
+        </select>
       </Field>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">

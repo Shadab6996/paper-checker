@@ -12,11 +12,12 @@ export default async function LoginPage() {
     .findUnique({ where: { id: "singleton" } })
     .catch(() => null);
   const studentNames = settings?.heroNames ?? [];
+  const quote = settings?.heroQuote || "The best answer sheet is the one that actually gets submitted.";
 
   return (
     <div className="flex min-h-dvh flex-col lg:flex-row">
       <div className="lg:w-1/2">
-        <HeroPanel studentNames={studentNames} />
+        <HeroPanel studentNames={studentNames} quote={quote} />
       </div>
 
       <main className="flex flex-1 flex-col items-center justify-center px-4 py-10 sm:px-6 lg:w-1/2">

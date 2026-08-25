@@ -10,6 +10,7 @@ const bodySchema = z
     name: z.string().trim().min(1),
     subject: z.string().trim().min(1),
     chapterName: z.string().trim().min(1),
+    section: z.enum(["ALL", "A", "B"]),
     startTime: z.coerce.date(),
     endTime: z.coerce.date(),
   })
@@ -29,7 +30,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       { status: 400 }
     );
   }
-  const { name, subject, chapterName, startTime, endTime } = parsed.data;
+  const { name, subject, chapterName, section, startTime, endTime } = parsed.data;
 
   let code = generateTestCode(subject, chapterName);
   while (await prisma.test.findUnique({ where: { code } })) {
@@ -37,7 +38,15 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   }
 
   const test = await prisma.test.create({
-    data: { name, subject, chapterName, code, startTime, endTime },
+    data: {
+      name,
+      subject,
+      chapterName,
+      code,
+      startTime,
+      endTime,
+      section: section === "ALL" ? null : section,
+    },
   });
 
   return NextResponse.json({ test });

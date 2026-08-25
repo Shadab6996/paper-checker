@@ -50,6 +50,7 @@ export default async function AdminTestsPage() {
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {test.subject} · {test.chapterName}
+                      {test.section && ` · Section ${test.section}`}
                     </p>
                   </div>
                   <div className="flex items-center gap-4">

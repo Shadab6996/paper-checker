@@ -6,6 +6,7 @@ import { withErrorHandling } from "@/lib/apiHandler";
 
 const bodySchema = z.object({
   heroNames: z.array(z.string().trim().max(40)).max(5),
+  heroQuote: z.string().trim().max(160),
 });
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
@@ -18,12 +19,13 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   }
 
   const heroNames = parsed.data.heroNames.filter((n) => n.length > 0);
+  const heroQuote = parsed.data.heroQuote;
 
   const settings = await prisma.settings.upsert({
     where: { id: "singleton" },
-    update: { heroNames },
-    create: { id: "singleton", heroNames },
+    update: { heroNames, heroQuote },
+    create: { id: "singleton", heroNames, heroQuote },
   });
 
-  return NextResponse.json({ heroNames: settings.heroNames });
+  return NextResponse.json({ heroNames: settings.heroNames, heroQuote: settings.heroQuote });
 });

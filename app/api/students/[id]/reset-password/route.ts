@@ -27,7 +27,7 @@ export const POST = withErrorHandling(async (
 
   const password = parsed.data.password || generatePassword();
   const passwordHash = await hashPassword(password);
-  await prisma.student.update({ where: { id }, data: { passwordHash } });
+  await prisma.student.update({ where: { id }, data: { passwordHash, passwordPlain: password } });
 
   return NextResponse.json({ password });
 });

@@ -23,6 +23,12 @@ export const POST = withErrorHandling(async (req: Request) => {
       if (getTestStatus(test.startTime, test.endTime) !== "live") {
         throw new Error("This test is not currently open");
       }
+      if (test.section) {
+        const student = await prisma.student.findUnique({ where: { id: session.sub } });
+        if (!student || student.section !== test.section) {
+          throw new Error("This test is not available for your section");
+        }
+      }
 
       return {
         addRandomSuffix: true,

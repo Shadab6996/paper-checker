@@ -11,27 +11,35 @@ datasource db {
 model Student {
   id           String       @id @default(cuid())
   name         String
+  section      String       @default("A")
   loginId      String       @unique
   passwordHash String
+  passwordPlain String?
   createdAt    DateTime     @default(now())
   submissions  Submission[]
+
+  @@index([section])
 }
 
 model Test {
-  id          String       @id @default(cuid())
-  code        String       @unique
-  name        String
-  subject     String
-  chapterName String
-  startTime   DateTime
-  endTime     DateTime
-  createdAt   DateTime     @default(now())
-  submissions Submission[]
+  id                String       @id @default(cuid())
+  code              String       @unique
+  name              String
+  subject           String
+  chapterName       String
+  section           String?
+  startTime         DateTime
+  endTime           DateTime
+  questionPaperPath String?
+  answerKeyPath     String?
+  createdAt         DateTime     @default(now())
+  submissions       Submission[]
 }
 
 model Settings {
   id        String   @id @default("singleton")
   heroNames String[] @default([])
+  heroQuote String   @default("The best answer sheet is the one that actually gets submitted.")
   updatedAt DateTime @updatedAt
 }
 

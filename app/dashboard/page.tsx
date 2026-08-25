@@ -15,8 +15,14 @@ export default async function DashboardPage() {
   const session = await requireRole("STUDENT");
   if (!session) redirect("/login");
 
+  const student = await prisma.student.findUnique({ where: { id: session.sub } });
+  if (!student) redirect("/login");
+
   const [tests, submissions] = await Promise.all([
-    prisma.test.findMany({ orderBy: { startTime: "asc" } }),
+    prisma.test.findMany({
+      where: { OR: [{ section: null }, { section: student.section }] },
+      orderBy: { startTime: "asc" },
+    }),
     prisma.submission.findMany({
       where: { studentId: session.sub },
       orderBy: { submittedAt: "desc" },

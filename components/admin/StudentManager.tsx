@@ -1,16 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Field } from "@/components/ui/Field";
 import { Card } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
 
+export type Section = "A" | "B";
+
 export type StudentRow = {
   id: string;
   name: string;
+  section: Section;
   loginId: string;
+  password: string | null;
   submissionCount: number;
 };
 
@@ -29,6 +33,7 @@ function suggestPassword(length = 6): string {
 export function StudentManager({ initialStudents }: { initialStudents: StudentRow[] }) {
   const [students, setStudents] = useState(initialStudents);
   const [name, setName] = useState("");
+  const [section, setSection] = useState<Section>("A");
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [credentials, setCredentials] = useState<Credentials | null>(null);
@@ -38,6 +43,27 @@ export function StudentManager({ initialStudents }: { initialStudents: StudentRo
   const [resetPassword, setResetPassword] = useState("");
   const [resetError, setResetError] = useState<string | null>(null);
   const [resetBusy, setResetBusy] = useState(false);
+  const [sectionFilter, setSectionFilter] = useState<"ALL" | Section>("ALL");
+  const [search, setSearch] = useState("");
+  const [revealed, setRevealed] = useState<Set<string>>(new Set());
+
+  function toggleReveal(id: string) {
+    setRevealed((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return students.filter((s) => {
+      if (sectionFilter !== "ALL" && s.section !== sectionFilter) return false;
+      if (q && !s.name.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [students, sectionFilter, search]);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -48,7 +74,7 @@ export function StudentManager({ initialStudents }: { initialStudents: StudentRo
       const res = await fetch("/api/students", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim() }),
+        body: JSON.stringify({ name: name.trim(), section }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -56,7 +82,7 @@ export function StudentManager({ initialStudents }: { initialStudents: StudentRo
         return;
       }
       setStudents((prev) => [
-        { ...data.student, submissionCount: 0 },
+        { ...data.student, password: data.password, submissionCount: 0 },
         ...prev,
       ]);
       setCredentials({
@@ -98,6 +124,9 @@ export function StudentManager({ initialStudents }: { initialStudents: StudentRo
         setResetError(data.error ?? "Could not reset password");
         return;
       }
+      setStudents((prev) =>
+        prev.map((s) => (s.id === resetTarget.id ? { ...s, password: data.password } : s))
+      );
       setCredentials({
         name: resetTarget.name,
         loginId: resetTarget.loginId,
@@ -138,6 +167,17 @@ export function StudentManager({ initialStudents }: { initialStudents: StudentRo
               />
             </Field>
           </div>
+          <Field label="Section" htmlFor="studentSection">
+            <select
+              id="studentSection"
+              value={section}
+              onChange={(e) => setSection(e.target.value as Section)}
+              className="min-h-11 rounded-xl border border-border bg-card px-3.5 py-2.5 text-base text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="A">Section A</option>
+              <option value="B">Section B</option>
+            </select>
+          </Field>
           <Button type="submit" disabled={adding || !name.trim()}>
             {adding ? "Adding…" : "Add student"}
           </Button>
@@ -149,29 +189,75 @@ export function StudentManager({ initialStudents }: { initialStudents: StudentRo
         )}
       </Card>
 
+      <div className="flex flex-wrap items-center gap-3">
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by name…"
+          className="max-w-xs"
+        />
+        <div className="flex gap-2">
+          {(["ALL", "A", "B"] as const).map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setSectionFilter(s)}
+              className={`min-h-9 cursor-pointer rounded-lg border px-3 text-xs font-semibold transition-colors ${
+                sectionFilter === s
+                  ? "border-primary bg-primary text-on-primary"
+                  : "border-border text-foreground hover:bg-muted"
+              }`}
+            >
+              {s === "ALL" ? "All" : `Section ${s}`}
+            </button>
+          ))}
+        </div>
+        <span className="text-xs text-muted-foreground">
+          {filtered.length} of {students.length}
+        </span>
+      </div>
+
       <Card className="overflow-x-auto p-0">
-        <table className="w-full min-w-[480px] text-left text-sm">
+        <table className="w-full min-w-[560px] text-left text-sm">
           <thead>
             <tr className="border-b border-border text-xs uppercase text-muted-foreground">
               <th className="px-5 py-3 font-semibold">Name</th>
+              <th className="px-5 py-3 font-semibold">Section</th>
               <th className="px-5 py-3 font-semibold">Login ID</th>
+              <th className="px-5 py-3 font-semibold">Password</th>
               <th className="px-5 py-3 font-semibold">Submissions</th>
               <th className="px-5 py-3 font-semibold">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {students.length === 0 ? (
+            {filtered.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-5 py-10 text-center text-muted-foreground">
-                  No students yet. Add your first one above.
+                <td colSpan={6} className="px-5 py-10 text-center text-muted-foreground">
+                  {students.length === 0
+                    ? "No students yet. Add your first one above."
+                    : "No students match that search."}
                 </td>
               </tr>
             ) : (
-              students.map((student) => (
+              filtered.map((student) => (
                 <tr key={student.id} className="border-b border-border last:border-0">
                   <td className="px-5 py-3 font-medium text-foreground">{student.name}</td>
+                  <td className="px-5 py-3 text-muted-foreground">Section {student.section}</td>
                   <td className="px-5 py-3 font-mono text-xs text-muted-foreground">
                     {student.loginId}
+                  </td>
+                  <td className="px-5 py-3 font-mono text-xs text-muted-foreground">
+                    {student.password ? (
+                      <button
+                        type="button"
+                        onClick={() => toggleReveal(student.id)}
+                        className="cursor-pointer underline decoration-dotted underline-offset-2 hover:text-foreground"
+                      >
+                        {revealed.has(student.id) ? student.password : "••••••"}
+                      </button>
+                    ) : (
+                      "—"
+                    )}
                   </td>
                   <td className="px-5 py-3 text-muted-foreground">{student.submissionCount}</td>
                   <td className="px-5 py-3">

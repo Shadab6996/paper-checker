@@ -5,7 +5,10 @@ import { requireRole, hashPassword } from "@/lib/auth";
 import { generateUniqueLoginId, generatePassword } from "@/lib/passwords";
 import { withErrorHandling } from "@/lib/apiHandler";
 
-const bodySchema = z.object({ name: z.string().trim().min(1) });
+const bodySchema = z.object({
+  name: z.string().trim().min(1),
+  section: z.enum(["A", "B"]),
+});
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
   const session = await requireRole("ADMIN");
@@ -15,18 +18,18 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
-  const { name } = parsed.data;
+  const { name, section } = parsed.data;
 
   const loginId = await generateUniqueLoginId(name);
   const password = generatePassword();
   const passwordHash = await hashPassword(password);
 
   const student = await prisma.student.create({
-    data: { name, loginId, passwordHash },
+    data: { name, section, loginId, passwordHash, passwordPlain: password },
   });
 
   return NextResponse.json({
-    student: { id: student.id, name: student.name, loginId: student.loginId },
+    student: { id: student.id, name: student.name, section: student.section, loginId: student.loginId },
     password,
   });
 });

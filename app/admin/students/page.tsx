@@ -14,7 +14,9 @@ export default async function AdminStudentsPage() {
   const rows = students.map((s) => ({
     id: s.id,
     name: s.name,
+    section: s.section as "A" | "B",
     loginId: s.loginId,
+    password: s.passwordPlain,
     submissionCount: s._count.submissions,
   }));
 
@@ -26,7 +28,12 @@ export default async function AdminStudentsPage() {
           {students.length} student{students.length === 1 ? "" : "s"} · add, delete, or reset passwords
         </p>
       </div>
-      <HeroNamesSettings initialNames={settings?.heroNames ?? []} />
+      <HeroNamesSettings
+        initialNames={settings?.heroNames ?? []}
+        initialQuote={
+          settings?.heroQuote ?? "The best answer sheet is the one that actually gets submitted."
+        }
+      />
       <StudentManager initialStudents={rows} />
     </div>
   );
