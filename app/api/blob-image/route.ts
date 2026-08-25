@@ -12,7 +12,10 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
     return NextResponse.json({ error: "Missing pathname" }, { status: 400 });
   }
 
-  const result = await get(pathname, { access: "private" });
+  const result = await get(pathname, {
+    access: "private",
+    token: process.env.BLOB_READ_WRITE_TOKEN,
+  });
   if (!result || result.statusCode !== 200) {
     return new NextResponse("Not found", { status: 404 });
   }

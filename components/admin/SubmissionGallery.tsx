@@ -57,7 +57,7 @@ export function SubmissionGallery({ items }: { items: SubmissionItem[] }) {
                   {item.studentName}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {new Date(item.submittedAt).toLocaleString([], {
+                  {new Date(item.submittedAt).toLocaleString("en-GB", {
                     dateStyle: "medium",
                     timeStyle: "short",
                   })}
