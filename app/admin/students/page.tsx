@@ -1,11 +1,15 @@
 import { prisma } from "@/lib/db";
 import { StudentManager } from "@/components/admin/StudentManager";
+import { HeroNamesSettings } from "@/components/admin/HeroNamesSettings";
 
 export default async function AdminStudentsPage() {
-  const students = await prisma.student.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { _count: { select: { submissions: true } } },
-  });
+  const [students, settings] = await Promise.all([
+    prisma.student.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { _count: { select: { submissions: true } } },
+    }),
+    prisma.settings.findUnique({ where: { id: "singleton" } }),
+  ]);
 
   const rows = students.map((s) => ({
     id: s.id,
@@ -22,6 +26,7 @@ export default async function AdminStudentsPage() {
           {students.length} student{students.length === 1 ? "" : "s"} · add, delete, or reset passwords
         </p>
       </div>
+      <HeroNamesSettings initialNames={settings?.heroNames ?? []} />
       <StudentManager initialStudents={rows} />
     </div>
   );

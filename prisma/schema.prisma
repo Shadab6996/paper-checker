@@ -29,6 +29,12 @@ model Test {
   submissions Submission[]
 }
 
+model Settings {
+  id        String   @id @default("singleton")
+  heroNames String[] @default([])
+  updatedAt DateTime @updatedAt
+}
+
 model Submission {
   id          String   @id @default(cuid())
   studentId   String
