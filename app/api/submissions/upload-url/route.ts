@@ -3,6 +3,7 @@ import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 import { withErrorHandling } from "@/lib/apiHandler";
+import { getTestStatus } from "@/lib/testStatus";
 
 export const POST = withErrorHandling(async (req: Request) => {
   const session = await requireRole("STUDENT");
@@ -19,6 +20,9 @@ export const POST = withErrorHandling(async (req: Request) => {
 
       const test = await prisma.test.findUnique({ where: { code: testCode } });
       if (!test) throw new Error("Test not found");
+      if (getTestStatus(test.startTime, test.endTime) !== "live") {
+        throw new Error("This test is not currently open");
+      }
 
       return {
         addRandomSuffix: true,

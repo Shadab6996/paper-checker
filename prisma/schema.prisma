@@ -23,6 +23,8 @@ model Test {
   name        String
   subject     String
   chapterName String
+  startTime   DateTime
+  endTime     DateTime
   createdAt   DateTime     @default(now())
   submissions Submission[]
 }

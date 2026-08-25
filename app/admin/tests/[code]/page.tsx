@@ -5,6 +5,10 @@ import { getBaseUrl } from "@/lib/url";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { CopyLinkBox } from "@/components/admin/CopyLinkBox";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { getTestStatus } from "@/lib/testStatus";
+
+export const dynamic = "force-dynamic";
 
 export default async function TestDetailPage({
   params,
@@ -24,9 +28,17 @@ export default async function TestDetailPage({
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
       <div>
-        <h1 className="text-xl font-bold text-foreground">{test.name}</h1>
+        <div className="mb-1 flex items-center gap-2">
+          <h1 className="text-xl font-bold text-foreground">{test.name}</h1>
+          <StatusBadge status={getTestStatus(test.startTime, test.endTime)} />
+        </div>
         <p className="text-sm text-muted-foreground">
           {test.subject} · {test.chapterName}
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Opens {test.startTime.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}
+          {" · "}
+          Closes {test.endTime.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}
         </p>
       </div>
 

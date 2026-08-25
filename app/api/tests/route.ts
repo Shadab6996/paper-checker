@@ -5,11 +5,18 @@ import { requireRole } from "@/lib/auth";
 import { generateTestCode } from "@/lib/passwords";
 import { withErrorHandling } from "@/lib/apiHandler";
 
-const bodySchema = z.object({
-  name: z.string().trim().min(1),
-  subject: z.string().trim().min(1),
-  chapterName: z.string().trim().min(1),
-});
+const bodySchema = z
+  .object({
+    name: z.string().trim().min(1),
+    subject: z.string().trim().min(1),
+    chapterName: z.string().trim().min(1),
+    startTime: z.coerce.date(),
+    endTime: z.coerce.date(),
+  })
+  .refine((data) => data.endTime > data.startTime, {
+    message: "End time must be after start time",
+    path: ["endTime"],
+  });
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
   const session = await requireRole("ADMIN");
@@ -17,9 +24,12 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Invalid request" },
+      { status: 400 }
+    );
   }
-  const { name, subject, chapterName } = parsed.data;
+  const { name, subject, chapterName, startTime, endTime } = parsed.data;
 
   let code = generateTestCode(subject, chapterName);
   while (await prisma.test.findUnique({ where: { code } })) {
@@ -27,7 +37,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   }
 
   const test = await prisma.test.create({
-    data: { name, subject, chapterName, code },
+    data: { name, subject, chapterName, code, startTime, endTime },
   });
 
   return NextResponse.json({ test });

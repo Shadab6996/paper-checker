@@ -2,6 +2,10 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { getTestStatus } from "@/lib/testStatus";
+
+export const dynamic = "force-dynamic";
 
 export default async function AdminTestsPage() {
   const tests = await prisma.test.findMany({
@@ -40,7 +44,10 @@ export default async function AdminTestsPage() {
               <Link href={`/admin/tests/${test.code}`}>
                 <Card className="flex flex-wrap items-center justify-between gap-3 p-5 transition-colors hover:bg-muted">
                   <div>
-                    <p className="font-semibold text-foreground">{test.name}</p>
+                    <div className="mb-1 flex items-center gap-2">
+                      <p className="font-semibold text-foreground">{test.name}</p>
+                      <StatusBadge status={getTestStatus(test.startTime, test.endTime)} />
+                    </div>
                     <p className="text-sm text-muted-foreground">
                       {test.subject} · {test.chapterName}
                     </p>

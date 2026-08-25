@@ -16,6 +16,16 @@ export type StudentRow = {
 
 type Credentials = { name: string; loginId: string; password: string };
 
+const PASSWORD_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no 0/O, 1/I/L
+
+function suggestPassword(length = 6): string {
+  let out = "";
+  for (let i = 0; i < length; i++) {
+    out += PASSWORD_CHARS[Math.floor(Math.random() * PASSWORD_CHARS.length)];
+  }
+  return out;
+}
+
 export function StudentManager({ initialStudents }: { initialStudents: StudentRow[] }) {
   const [students, setStudents] = useState(initialStudents);
   const [name, setName] = useState("");
@@ -24,6 +34,10 @@ export function StudentManager({ initialStudents }: { initialStudents: StudentRo
   const [credentials, setCredentials] = useState<Credentials | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<StudentRow | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [resetTarget, setResetTarget] = useState<StudentRow | null>(null);
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [resetBusy, setResetBusy] = useState(false);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -58,18 +72,42 @@ export function StudentManager({ initialStudents }: { initialStudents: StudentRo
     }
   }
 
-  async function handleResetPassword(student: StudentRow) {
-    setBusyId(student.id);
+  function openResetModal(student: StudentRow) {
+    setResetTarget(student);
+    setResetPassword(suggestPassword());
+    setResetError(null);
+  }
+
+  async function handleResetPassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (!resetTarget) return;
+    if (resetPassword.trim().length < 4) {
+      setResetError("Password must be at least 4 characters");
+      return;
+    }
+    setResetError(null);
+    setResetBusy(true);
     try {
-      const res = await fetch(`/api/students/${student.id}/reset-password`, {
+      const res = await fetch(`/api/students/${resetTarget.id}/reset-password`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: resetPassword.trim() }),
       });
       const data = await res.json();
-      if (res.ok) {
-        setCredentials({ name: student.name, loginId: student.loginId, password: data.password });
+      if (!res.ok) {
+        setResetError(data.error ?? "Could not reset password");
+        return;
       }
+      setCredentials({
+        name: resetTarget.name,
+        loginId: resetTarget.loginId,
+        password: data.password,
+      });
+      setResetTarget(null);
+    } catch {
+      setResetError("Network error, please try again");
     } finally {
-      setBusyId(null);
+      setResetBusy(false);
     }
   }
 
@@ -141,7 +179,7 @@ export function StudentManager({ initialStudents }: { initialStudents: StudentRo
                       <button
                         type="button"
                         disabled={busyId === student.id}
-                        onClick={() => handleResetPassword(student)}
+                        onClick={() => openResetModal(student)}
                         className="min-h-9 cursor-pointer rounded-lg border border-border px-3 text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50"
                       >
                         Reset password
@@ -162,6 +200,53 @@ export function StudentManager({ initialStudents }: { initialStudents: StudentRo
           </tbody>
         </table>
       </Card>
+
+      {resetTarget && (
+        <Modal title="Reset password" onClose={() => setResetTarget(null)}>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Set a new password for <strong>{resetTarget.name}</strong>. Type your own, or use the
+            suggested one.
+          </p>
+          <form onSubmit={handleResetPassword} className="flex flex-col gap-4">
+            <Field label="New password" htmlFor="resetPassword" required>
+              <div className="flex gap-2">
+                <Input
+                  id="resetPassword"
+                  value={resetPassword}
+                  onChange={(e) => setResetPassword(e.target.value)}
+                  autoFocus
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setResetPassword(suggestPassword())}
+                  className="min-h-11 shrink-0 cursor-pointer rounded-xl border border-border px-3 text-xs font-semibold text-foreground hover:bg-muted"
+                >
+                  Suggest
+                </button>
+              </div>
+            </Field>
+            {resetError && (
+              <p role="alert" className="text-sm font-medium text-destructive">
+                {resetError}
+              </p>
+            )}
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="secondary"
+                className="flex-1"
+                onClick={() => setResetTarget(null)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" className="flex-1" disabled={resetBusy}>
+                {resetBusy ? "Saving…" : "Save password"}
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
 
       {credentials && (
         <Modal title="Login credentials" onClose={() => setCredentials(null)}>

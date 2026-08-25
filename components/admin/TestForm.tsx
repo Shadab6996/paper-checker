@@ -6,17 +6,35 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Field } from "@/components/ui/Field";
 
+function toLocalInputValue(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+    date.getHours()
+  )}:${pad(date.getMinutes())}`;
+}
+
+const defaultStart = new Date(Date.now() + 5 * 60 * 1000); // 5 min from now
+const defaultEnd = new Date(defaultStart.getTime() + 24 * 60 * 60 * 1000); // +1 day
+
 export function TestForm() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [subject, setSubject] = useState("");
   const [chapterName, setChapterName] = useState("");
+  const [startTime, setStartTime] = useState(toLocalInputValue(defaultStart));
+  const [endTime, setEndTime] = useState(toLocalInputValue(defaultEnd));
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (new Date(endTime) <= new Date(startTime)) {
+      setError("End time must be after start time");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch("/api/tests", {
@@ -26,6 +44,8 @@ export function TestForm() {
           name: name.trim(),
           subject: subject.trim(),
           chapterName: chapterName.trim(),
+          startTime: new Date(startTime).toISOString(),
+          endTime: new Date(endTime).toISOString(),
         }),
       });
       const data = await res.json();
@@ -75,6 +95,29 @@ export function TestForm() {
           required
         />
       </Field>
+
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <Field label="Opens at" htmlFor="startTime" required>
+          <Input
+            id="startTime"
+            type="datetime-local"
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)}
+            required
+          />
+        </Field>
+
+        <Field label="Closes at" htmlFor="endTime" required>
+          <Input
+            id="endTime"
+            type="datetime-local"
+            value={endTime}
+            min={startTime}
+            onChange={(e) => setEndTime(e.target.value)}
+            required
+          />
+        </Field>
+      </div>
 
       {error && (
         <p role="alert" className="text-sm font-medium text-destructive">
