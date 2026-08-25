@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Student {
+  id           String       @id @default(cuid())
+  name         String
+  loginId      String       @unique
+  passwordHash String
+  createdAt    DateTime     @default(now())
+  submissions  Submission[]
+}
+
+model Test {
+  id          String       @id @default(cuid())
+  code        String       @unique
+  name        String
+  subject     String
+  chapterName String
+  createdAt   DateTime     @default(now())
+  submissions Submission[]
+}
+
+model Submission {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  testId      String
+  test        Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  storagePath String
+  submittedAt DateTime @default(now())
+
+  @@index([testId])
+  @@index([studentId])
+}

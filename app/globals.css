@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+:root {
+  --color-primary: #0d9488;
+  --color-primary-hover: #0f766e;
+  --color-on-primary: #ffffff;
+  --color-secondary: #14b8a6;
+  --color-accent: #ea580c;
+  --color-accent-hover: #c2410c;
+  --color-on-accent: #ffffff;
+
+  --color-background: #f0fdfa;
+  --color-foreground: #134e4a;
+  --color-card: #ffffff;
+  --color-card-foreground: #134e4a;
+  --color-muted: #e8f1f4;
+  --color-muted-foreground: #475569;
+  --color-border: #99f6e4;
+
+  --color-success: #16a34a;
+  --color-destructive: #dc2626;
+  --color-destructive-hover: #b91c1c;
+  --color-on-destructive: #ffffff;
+  --color-ring: #0d9488;
+
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+@theme inline {
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-on-primary: var(--color-on-primary);
+  --color-secondary: var(--color-secondary);
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-on-accent: var(--color-on-accent);
+  --color-background: var(--color-background);
+  --color-foreground: var(--color-foreground);
+  --color-card: var(--color-card);
+  --color-card-foreground: var(--color-card-foreground);
+  --color-muted: var(--color-muted);
+  --color-muted-foreground: var(--color-muted-foreground);
+  --color-border: var(--color-border);
+  --color-success: var(--color-success);
+  --color-destructive: var(--color-destructive);
+  --color-destructive-hover: var(--color-destructive-hover);
+  --color-on-destructive: var(--color-on-destructive);
+  --color-ring: var(--color-ring);
+  --font-sans: var(--font-sans);
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
