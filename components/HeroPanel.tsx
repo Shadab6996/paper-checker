@@ -1,76 +1,79 @@
-const features = [
-  {
-    title: "Snap & submit",
-    body: "Photograph your answer sheet and turn it in straight from your phone.",
-    icon: (
-      <path d="M4 8a2 2 0 0 1 2-2h1.2a2 2 0 0 0 1.664-.89l.272-.41A2 2 0 0 1 10.8 4h2.4a2 2 0 0 1 1.664.89l.272.41A2 2 0 0 0 16.8 6H18a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" />
-    ),
-    circle: true,
-  },
-  {
-    title: "One link per test",
-    body: "Your teacher shares a link — open it, and you're already on the right test.",
-    icon: <path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07L11.5 4.5M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07L12.5 19.5" />,
-  },
-  {
-    title: "Nothing to lose",
-    body: "Once it's turned in, it's saved — your teacher can find it anytime.",
-    icon: <path d="M9 12l2 2 4-4m5 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />,
-  },
-];
+"use client";
+
+import { useState } from "react";
+import dynamic from "next/dynamic";
+import HeroFigure from "./hero/HeroFigure";
+import Rocket from "./hero/Rocket";
+
+const HeroScene = dynamic(() => import("./hero/HeroScene"), { ssr: false });
+
+type Theme = "night" | "day";
+
+const SKY: Record<Theme, string> = {
+  night: "#03050a",
+  day: "linear-gradient(180deg, #4fa8e8 0%, #8ecdfb 45%, #ffe3b0 100%)",
+};
+
+const QUOTE = "The best answer sheet is the one that actually gets submitted.";
 
 export function HeroPanel() {
-  return (
-    <div className="relative flex h-full flex-col justify-center overflow-hidden bg-primary px-6 py-10 text-on-primary sm:px-12 sm:py-16 lg:px-16">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-on-primary/10 blur-3xl motion-safe:animate-[pulse_8s_ease-in-out_infinite]"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-32 -left-16 h-96 w-96 rounded-full bg-accent/20 blur-3xl motion-safe:animate-[pulse_10s_ease-in-out_infinite]"
-      />
+  const [theme, setTheme] = useState<Theme>("night");
+  const isDay = theme === "day";
 
-      <div className="relative">
-        <p className="text-sm font-semibold uppercase tracking-widest text-on-primary/70">
+  const pillClass = isDay
+    ? "border-black/10 bg-black/5 text-slate-500 hover:text-orange-500"
+    : "border-white/10 bg-white/5 text-white/35 hover:text-[#7dd4ff]";
+
+  return (
+    <div
+      className="relative flex h-full min-h-[640px] flex-col overflow-hidden transition-[background] duration-700"
+      style={{ background: SKY[theme] }}
+    >
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-4/5 sm:w-3/5">
+        <HeroScene theme={theme} />
+      </div>
+      <HeroFigure sizeClassName="h-[30vh] w-auto max-h-[300px] object-contain object-bottom opacity-90 drop-shadow-[0_0_40px_rgba(0,0,0,0.6)]" />
+      <Rocket />
+
+      <button
+        type="button"
+        onClick={() => setTheme(isDay ? "night" : "day")}
+        aria-label="Toggle day/night"
+        className={`absolute left-5 top-5 z-10 cursor-pointer rounded-lg border px-2.5 py-1 text-xs font-medium backdrop-blur-xl transition-colors ${pillClass}`}
+      >
+        {isDay ? "Day" : "Night"}
+      </button>
+
+      <div className="pointer-events-none relative z-10 px-6 pt-16 sm:px-12 sm:pt-20 lg:px-16">
+        <p
+          className={`text-sm font-semibold uppercase tracking-widest ${
+            isDay ? "text-slate-700/70" : "text-white/70"
+          }`}
+        >
           Paper Checker
         </p>
-        <h1 className="mt-3 max-w-md text-4xl font-extrabold leading-tight sm:text-5xl">
-          Turn in your test in seconds.
+        <h1
+          className={`mt-3 max-w-md text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl ${
+            isDay ? "text-slate-900" : "text-white"
+          }`}
+        >
+          Turn in your test
         </h1>
-        <p className="mt-4 max-w-sm text-base text-on-primary/85">
-          No app to install, no papers to lose. Log in, open your test link, snap a
-          photo, and you&apos;re done.
-        </p>
+        <h1
+          className={`max-w-md text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl ${
+            isDay ? "text-slate-900/25" : "text-white/25"
+          }`}
+        >
+          in seconds.
+        </h1>
 
-        <ul className="mt-10 hidden flex-col gap-5 sm:flex">
-          {features.map((f) => (
-            <li key={f.title} className="flex items-start gap-3">
-              <span
-                className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-on-primary/15`}
-              >
-                <svg
-                  aria-hidden="true"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.75"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  {f.icon}
-                  {f.circle && <circle cx="12" cy="12.5" r="3.5" />}
-                </svg>
-              </span>
-              <div>
-                <p className="font-semibold">{f.title}</p>
-                <p className="text-sm text-on-primary/75">{f.body}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <p
+          className={`mt-6 max-w-sm text-base font-light italic leading-relaxed ${
+            isDay ? "text-slate-600" : "text-white/50"
+          }`}
+        >
+          &ldquo;{QUOTE}&rdquo;
+        </p>
       </div>
     </div>
   );

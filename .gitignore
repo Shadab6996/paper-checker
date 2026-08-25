@@ -42,6 +42,9 @@ yarn-error.log*
 # Claude Code local skill tooling, not app source
 .claude/
 
+# Separate sibling project (its own git repo), not part of this app
+/study streak/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

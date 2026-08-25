@@ -77,3 +77,73 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Hero scene decoration (rocket flyby, card entrance) */
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rocket-fly {
+  from {
+    transform: translateX(115vw);
+  }
+  to {
+    transform: translateX(-140vw);
+  }
+}
+
+.animate-rocket-fly {
+  animation: rocket-fly 16s linear infinite;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out both;
+}
+
+/* Cursor-reactive glow — a soft light that follows the pointer over a card */
+.glow-card {
+  --x: 50%;
+  --y: 50%;
+}
+
+.glow-card-sheen {
+  background: radial-gradient(
+    360px circle at var(--x) var(--y),
+    #5ec8ff26,
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.glow-card:hover .glow-card-sheen {
+  opacity: 1;
+}
+
+.glow-card-border {
+  background: radial-gradient(
+    220px circle at var(--x) var(--y),
+    #7dd4ff55,
+    transparent 70%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  padding: 1px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.glow-card:hover .glow-card-border {
+  opacity: 1;
+}
