@@ -2,10 +2,15 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
-import { Input } from "@/components/ui/Input";
-import { AI_PROVIDERS, PROVIDER_LABELS, DEFAULT_MODELS, type AiProvider } from "@/lib/ai/types";
+import { FREE_MODEL_OPTIONS, type AiProvider } from "@/lib/ai/types";
+
+function findOptionId(provider: AiProvider, model: string | null): string {
+  const match = FREE_MODEL_OPTIONS.find(
+    (o) => o.provider === provider && o.model === (model || o.model)
+  );
+  return match?.id ?? FREE_MODEL_OPTIONS[0].id;
+}
 
 export function AiGradingSettings({
   initialProvider,
@@ -14,13 +19,16 @@ export function AiGradingSettings({
   initialProvider: AiProvider;
   initialModel: string | null;
 }) {
-  const [provider, setProvider] = useState<AiProvider>(initialProvider);
-  const [model, setModel] = useState(initialModel ?? "");
+  const [optionId, setOptionId] = useState(findOptionId(initialProvider, initialModel));
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSave() {
+  async function handleSave(nextId: string) {
+    setOptionId(nextId);
+    const option = FREE_MODEL_OPTIONS.find((o) => o.id === nextId);
+    if (!option) return;
+
     setSaving(true);
     setError(null);
     setSaved(false);
@@ -28,7 +36,7 @@ export function AiGradingSettings({
       const res = await fetch("/api/settings/ai-grading", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider, model: model.trim() || undefined }),
+        body: JSON.stringify({ provider: option.provider, model: option.model }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Could not save");
@@ -45,45 +53,25 @@ export function AiGradingSettings({
       <div>
         <h2 className="text-sm font-semibold text-foreground">AI grading model</h2>
         <p className="text-xs text-muted-foreground">
-          Which AI checks papers when you use &quot;Check papers with AI&quot;. Only Gemini has
-          a free key configured by default — Claude and Grok need their own API key added
-          (ask to have one wired in once you have it).
+          Which AI checks papers when you use &quot;Check papers with AI&quot;. Only free
+          options are listed.
         </p>
       </div>
 
-      <Field label="Provider" htmlFor="aiProvider">
+      <Field label="Model" htmlFor="aiModelOption">
         <select
-          id="aiProvider"
-          value={provider}
-          onChange={(e) => {
-            const next = e.target.value as AiProvider;
-            setProvider(next);
-            setSaved(false);
-          }}
+          id="aiModelOption"
+          value={optionId}
+          onChange={(e) => handleSave(e.target.value)}
+          disabled={saving}
           className="min-h-11 w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-base text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          {AI_PROVIDERS.map((p) => (
-            <option key={p} value={p}>
-              {PROVIDER_LABELS[p]}
+          {FREE_MODEL_OPTIONS.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.label}
             </option>
           ))}
         </select>
-      </Field>
-
-      <Field
-        label="Model"
-        htmlFor="aiModel"
-        hint={`Leave blank to use the default (${DEFAULT_MODELS[provider]})`}
-      >
-        <Input
-          id="aiModel"
-          value={model}
-          onChange={(e) => {
-            setModel(e.target.value);
-            setSaved(false);
-          }}
-          placeholder={DEFAULT_MODELS[provider]}
-        />
       </Field>
 
       {error && (
@@ -91,11 +79,8 @@ export function AiGradingSettings({
           {error}
         </p>
       )}
-      {saved && <p className="text-sm font-medium text-success">Saved.</p>}
-
-      <Button onClick={handleSave} disabled={saving} className="self-start">
-        {saving ? "Saving…" : "Save"}
-      </Button>
+      {saving && <p className="text-sm text-muted-foreground">Saving…</p>}
+      {saved && !saving && <p className="text-sm font-medium text-success">Saved.</p>}
     </Card>
   );
 }

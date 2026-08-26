@@ -23,22 +23,42 @@ export type GradeParams = {
   model?: string | null;
 };
 
-export const AI_PROVIDERS = ["gemini", "anthropic", "grok", "openrouter"] as const;
+export const AI_PROVIDERS = ["gemini", "openrouter"] as const;
 export type AiProvider = (typeof AI_PROVIDERS)[number];
 
 export const PROVIDER_LABELS: Record<AiProvider, string> = {
   gemini: "Google Gemini",
-  anthropic: "Anthropic Claude",
-  grok: "xAI Grok",
   openrouter: "OpenRouter",
 };
 
 export const DEFAULT_MODELS: Record<AiProvider, string> = {
   gemini: "gemini-3.6-flash",
-  anthropic: "claude-sonnet-5",
-  grok: "grok-4",
   openrouter: "dots-studio/dots-3-note-preview:free",
 };
+
+export type ModelOption = {
+  id: string;
+  provider: AiProvider;
+  model: string;
+  label: string;
+};
+
+// Only models that are genuinely free and verified to actually grade an image + return
+// valid JSON — kept short on purpose so admin can just pick one, not guess.
+export const FREE_MODEL_OPTIONS: ModelOption[] = [
+  {
+    id: "gemini-flash",
+    provider: "gemini",
+    model: "gemini-3.6-flash",
+    label: "Google Gemini — gemini-3.6-flash (recommended, most reliable)",
+  },
+  {
+    id: "openrouter-dots",
+    provider: "openrouter",
+    model: "dots-studio/dots-3-note-preview:free",
+    label: "OpenRouter — Dots 3 Note (free, backup option)",
+  },
+];
 
 export function buildGradingPrompt(subject: string, chapterName: string): string {
   return `You are grading a student's handwritten answer sheet for a school test.
