@@ -23,9 +23,31 @@ const RESPONSE_SCHEMA = {
   required: ["totalScore", "totalMaxScore", "questions", "overallFeedback"],
 };
 
+async function callGemini(
+  model: string,
+  apiKey: string,
+  parts: Record<string, unknown>[]
+): Promise<Response> {
+  return fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: RESPONSE_SCHEMA,
+        },
+      }),
+    }
+  );
+}
+
 export async function gradeWithGemini(params: GradeParams): Promise<GradeResult> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
+  const primaryKey = process.env.GEMINI_API_KEY;
+  if (!primaryKey) throw new Error("GEMINI_API_KEY is not set");
+  const backupKey = process.env.GEMINI_API_KEY_2;
   const model = params.model || DEFAULT_MODELS.gemini;
 
   const parts: Record<string, unknown>[] = [
@@ -65,20 +87,11 @@ export async function gradeWithGemini(params: GradeParams): Promise<GradeResult>
     });
   }
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema: RESPONSE_SCHEMA,
-        },
-      }),
-    }
-  );
+  let res = await callGemini(model, primaryKey, parts);
+
+  if (res.status === 429 && backupKey) {
+    res = await callGemini(model, backupKey, parts);
+  }
 
   if (!res.ok) {
     const errText = await res.text().catch(() => "");
