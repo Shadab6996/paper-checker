@@ -29,7 +29,8 @@ function StatusBadge({ item }: { item: SubmissionItem }) {
   if (item.gradeStatus === "approved") {
     return (
       <span className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-semibold text-success">
-        Approved: {item.finalScore}/{item.aiMaxScore}
+        Approved: {item.finalScore}
+        {item.aiMaxScore != null ? `/${item.aiMaxScore}` : ""}
       </span>
     );
   }

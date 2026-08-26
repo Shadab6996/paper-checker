@@ -21,21 +21,50 @@ export function TestDocuments({
   testCode,
   initialQuestionPaperPath,
   initialAnswerKeyPath,
+  initialQuestionPaperShared,
+  initialAnswerKeyShared,
 }: {
   testCode: string;
   initialQuestionPaperPath: string | null;
   initialAnswerKeyPath: string | null;
+  initialQuestionPaperShared: boolean;
+  initialAnswerKeyShared: boolean;
 }) {
   const [paths, setPaths] = useState<Record<Kind, string | null>>({
     questionPaper: initialQuestionPaperPath,
     answerKey: initialAnswerKeyPath,
   });
+  const [shared, setShared] = useState<Record<Kind, boolean>>({
+    questionPaper: initialQuestionPaperShared,
+    answerKey: initialAnswerKeyShared,
+  });
+  const [sharing, setSharing] = useState<Kind | null>(null);
   const [busy, setBusy] = useState<Kind | null>(null);
   const [error, setError] = useState<string | null>(null);
   const inputRefs = {
     questionPaper: useRef<HTMLInputElement>(null),
     answerKey: useRef<HTMLInputElement>(null),
   };
+
+  async function toggleShared(kind: Kind) {
+    const next = !shared[kind];
+    setSharing(kind);
+    setError(null);
+    try {
+      const res = await fetch(`/api/tests/${testCode}/documents/share`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind, shared: next }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Could not update sharing");
+      setShared((prev) => ({ ...prev, [kind]: next }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update sharing");
+    } finally {
+      setSharing(null);
+    }
+  }
 
   async function handleFile(kind: Kind, file: File) {
     setError(null);
@@ -78,7 +107,19 @@ export function TestDocuments({
               {paths[kind] ? "Uploaded" : "Not uploaded yet"}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {paths[kind] && (
+              <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={shared[kind]}
+                  disabled={sharing === kind}
+                  onChange={() => toggleShared(kind)}
+                  className="h-4 w-4 cursor-pointer"
+                />
+                Share with students
+              </label>
+            )}
             {paths[kind] && (
               <a
                 href={`/api/blob-image?pathname=${encodeURIComponent(paths[kind]!)}`}

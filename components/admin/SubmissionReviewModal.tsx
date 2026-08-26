@@ -139,6 +139,75 @@ function GradeReview({
   );
 }
 
+function ManualGradeForm({
+  itemId,
+  onApprove,
+  initialScore = "",
+  initialFeedback = "",
+}: {
+  itemId: string;
+  onApprove: (id: string, score: number, feedback: string) => Promise<void>;
+  initialScore?: string;
+  initialFeedback?: string;
+}) {
+  const [score, setScore] = useState(initialScore);
+  const [feedback, setFeedback] = useState(initialFeedback);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSave() {
+    const parsedScore = Number(score);
+    if (score.trim() === "" || Number.isNaN(parsedScore) || parsedScore < 0) {
+      setError("Enter a valid score");
+      return;
+    }
+    if (!feedback.trim()) {
+      setError("Feedback can't be empty");
+      return;
+    }
+    setError(null);
+    setSaving(true);
+    try {
+      await onApprove(itemId, parsedScore, feedback.trim());
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="mt-2 flex flex-col gap-3 rounded-xl border border-border p-4">
+      <div className="flex items-center gap-2">
+        <label htmlFor="manualScore" className="text-sm text-muted-foreground">
+          Score
+        </label>
+        <input
+          id="manualScore"
+          type="number"
+          min={0}
+          value={score}
+          onChange={(e) => setScore(e.target.value)}
+          className="w-24 rounded-lg border border-border bg-card px-2.5 py-1.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
+      </div>
+      <textarea
+        value={feedback}
+        onChange={(e) => setFeedback(e.target.value)}
+        rows={4}
+        placeholder="Feedback for the student…"
+        className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      />
+      {error && (
+        <p role="alert" className="text-sm font-medium text-destructive">
+          {error}
+        </p>
+      )}
+      <Button disabled={saving} onClick={handleSave}>
+        {saving ? "Saving…" : "Save grade"}
+      </Button>
+    </div>
+  );
+}
+
 export function SubmissionReviewModal({
   item,
   hasAnswerKey,
@@ -147,6 +216,8 @@ export function SubmissionReviewModal({
   onApprove,
   isGrading,
 }: Props) {
+  const [manual, setManual] = useState(false);
+
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -203,12 +274,18 @@ export function SubmissionReviewModal({
                   ? "Not checked yet."
                   : "Upload an answer key for this test before checking papers."}
               </p>
-              <Button
-                disabled={!hasAnswerKey || isGrading}
-                onClick={() => onGrade(item.id)}
-              >
-                {isGrading ? "Checking…" : "Check this paper"}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  disabled={!hasAnswerKey || isGrading}
+                  onClick={() => onGrade(item.id)}
+                >
+                  {isGrading ? "Checking…" : "Check this paper"}
+                </Button>
+                <Button variant="secondary" onClick={() => setManual((v) => !v)}>
+                  {manual ? "Cancel" : "Grade manually"}
+                </Button>
+              </div>
+              {manual && <ManualGradeForm itemId={item.id} onApprove={onApprove} />}
             </div>
           )}
 
@@ -216,9 +293,15 @@ export function SubmissionReviewModal({
             <div className="flex flex-col items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
               <p className="text-sm font-medium text-destructive">Couldn&apos;t check this paper</p>
               <p className="text-xs text-muted-foreground">{item.gradeError}</p>
-              <Button disabled={isGrading} onClick={() => onGrade(item.id)}>
-                {isGrading ? "Retrying…" : "Retry"}
-              </Button>
+              <div className="flex gap-2">
+                <Button disabled={isGrading} onClick={() => onGrade(item.id)}>
+                  {isGrading ? "Retrying…" : "Retry"}
+                </Button>
+                <Button variant="secondary" onClick={() => setManual((v) => !v)}>
+                  {manual ? "Cancel" : "Grade manually"}
+                </Button>
+              </div>
+              {manual && <ManualGradeForm itemId={item.id} onApprove={onApprove} />}
             </div>
           )}
 
@@ -232,6 +315,33 @@ export function SubmissionReviewModal({
                 isGrading={isGrading}
               />
             )}
+
+          {item.gradeStatus === "approved" && !item.aiFeedback && (
+            <div className="flex flex-col gap-3">
+              <p className="text-lg font-bold text-foreground">
+                Grade: {item.finalScore}
+                {!manual && (
+                  <button
+                    type="button"
+                    onClick={() => setManual(true)}
+                    className="ml-3 cursor-pointer text-sm font-semibold text-primary hover:underline"
+                  >
+                    Edit
+                  </button>
+                )}
+              </p>
+              <p className="text-sm text-foreground">{item.finalFeedback}</p>
+              {manual && (
+                <ManualGradeForm
+                  key={item.finalScore}
+                  itemId={item.id}
+                  onApprove={onApprove}
+                  initialScore={String(item.finalScore ?? "")}
+                  initialFeedback={item.finalFeedback ?? ""}
+                />
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

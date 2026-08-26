@@ -31,7 +31,9 @@ model Test {
   startTime         DateTime
   endTime           DateTime
   questionPaperPath String?
+  questionPaperShared Boolean    @default(false)
   answerKeyPath     String?
+  answerKeyShared   Boolean      @default(false)
   createdAt         DateTime     @default(now())
   submissions       Submission[]
 }

@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { CopyLinkBox } from "@/components/admin/CopyLinkBox";
 import { TestDocuments } from "@/components/admin/TestDocuments";
+import { DeleteTestButton } from "@/components/admin/DeleteTestButton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { getTestStatus } from "@/lib/testStatus";
 
@@ -58,12 +59,15 @@ export default async function TestDetailPage({
       <Card className="flex flex-col gap-3 p-6">
         <h2 className="text-sm font-semibold text-foreground">Test documents</h2>
         <p className="text-xs text-muted-foreground">
-          For your own reference — not shown to students.
+          Check &quot;Share with students&quot; to let students view a document (e.g. the
+          answer key, once the test has ended).
         </p>
         <TestDocuments
           testCode={test.code}
           initialQuestionPaperPath={test.questionPaperPath}
           initialAnswerKeyPath={test.answerKeyPath}
+          initialQuestionPaperShared={test.questionPaperShared}
+          initialAnswerKeyShared={test.answerKeyShared}
         />
       </Card>
 
@@ -76,6 +80,14 @@ export default async function TestDetailPage({
         <Link href="/admin" className="text-sm font-medium text-muted-foreground hover:text-foreground">
           Back to all tests
         </Link>
+      </div>
+
+      <div className="flex justify-end">
+        <DeleteTestButton
+          testCode={test.code}
+          testName={test.name}
+          submissionCount={test._count.submissions}
+        />
       </div>
     </div>
   );

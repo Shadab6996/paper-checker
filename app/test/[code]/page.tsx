@@ -94,6 +94,34 @@ export default async function TestSubmissionPage({
             )}
           </div>
         </Card>
+
+        {!wrongSection && (test.questionPaperShared || test.answerKeyShared) && (
+          <Card className="flex flex-col gap-3 p-6">
+            <h2 className="text-sm font-semibold text-foreground">Resources</h2>
+            <div className="flex flex-wrap gap-3">
+              {test.questionPaperShared && (
+                <a
+                  href={`/api/tests/${test.code}/documents/view?kind=questionPaper`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="min-h-9 cursor-pointer rounded-lg border border-border px-3 py-1.5 text-sm font-semibold text-foreground hover:bg-muted"
+                >
+                  Question paper
+                </a>
+              )}
+              {test.answerKeyShared && (
+                <a
+                  href={`/api/tests/${test.code}/documents/view?kind=answerKey`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="min-h-9 cursor-pointer rounded-lg border border-border px-3 py-1.5 text-sm font-semibold text-foreground hover:bg-muted"
+                >
+                  Answer key
+                </a>
+              )}
+            </div>
+          </Card>
+        )}
       </main>
     </div>
   );

@@ -86,12 +86,14 @@ export default async function DashboardPage() {
                       </p>
                     )}
                   </div>
-                  {status === "live" ? (
+                  {status === "live" ||
+                  (status === "ended" &&
+                    (test.questionPaperShared || test.answerKeyShared)) ? (
                     <Link
                       href={`/test/${test.code}`}
                       className="shrink-0 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary hover:bg-primary-hover"
                     >
-                      Open
+                      {status === "live" ? "Open" : "View"}
                     </Link>
                   ) : (
                     <span className="shrink-0 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground">
