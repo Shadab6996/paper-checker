@@ -6,6 +6,7 @@ import { LogoutButton } from "@/components/LogoutButton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { getSession } from "@/lib/auth";
 import { getTestStatus } from "@/lib/testStatus";
+import { formatDateTime } from "@/lib/formatDate";
 
 export const dynamic = "force-dynamic";
 
@@ -68,12 +69,7 @@ export default async function TestSubmissionPage({
                   <div className="flex flex-col items-center gap-2 py-6 text-center">
                     <p className="font-semibold text-foreground">This test isn&apos;t open yet</p>
                     <p className="text-sm text-muted-foreground">
-                      Opens{" "}
-                      {test.startTime.toLocaleString("en-GB", {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })}
-                      . Come back then.
+                      Opens {formatDateTime(test.startTime)}. Come back then.
                     </p>
                   </div>
                 )}
@@ -81,12 +77,8 @@ export default async function TestSubmissionPage({
                   <div className="flex flex-col items-center gap-2 py-6 text-center">
                     <p className="font-semibold text-foreground">This test is closed</p>
                     <p className="text-sm text-muted-foreground">
-                      It closed{" "}
-                      {test.endTime.toLocaleString("en-GB", {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })}
-                      . Contact your teacher if you still need to submit.
+                      It closed {formatDateTime(test.endTime)}. Contact your teacher if you
+                      still need to submit.
                     </p>
                   </div>
                 )}

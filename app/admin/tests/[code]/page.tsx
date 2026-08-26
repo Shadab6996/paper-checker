@@ -9,6 +9,7 @@ import { TestDocuments } from "@/components/admin/TestDocuments";
 import { DeleteTestButton } from "@/components/admin/DeleteTestButton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { getTestStatus } from "@/lib/testStatus";
+import { formatDateTime } from "@/lib/formatDate";
 
 export const dynamic = "force-dynamic";
 
@@ -39,9 +40,9 @@ export default async function TestDetailPage({
           {test.section && ` · Section ${test.section}`}
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Opens {test.startTime.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}
+          Opens {formatDateTime(test.startTime)}
           {" · "}
-          Closes {test.endTime.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}
+          Closes {formatDateTime(test.endTime)}
         </p>
       </div>
 

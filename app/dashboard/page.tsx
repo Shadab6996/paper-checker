@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { LogoutButton } from "@/components/LogoutButton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { getTestStatus, type TestStatus } from "@/lib/testStatus";
+import { formatDateTime, formatDate } from "@/lib/formatDate";
 
 export const dynamic = "force-dynamic";
 
@@ -69,20 +70,12 @@ export default async function DashboardPage() {
                     </p>
                     {status === "upcoming" && (
                       <p className="mt-1 text-xs text-muted-foreground">
-                        Opens{" "}
-                        {test.startTime.toLocaleString("en-GB", {
-                          dateStyle: "medium",
-                          timeStyle: "short",
-                        })}
+                        Opens {formatDateTime(test.startTime)}
                       </p>
                     )}
                     {status === "ended" && (
                       <p className="mt-1 text-xs text-muted-foreground">
-                        Closed{" "}
-                        {test.endTime.toLocaleString("en-GB", {
-                          dateStyle: "medium",
-                          timeStyle: "short",
-                        })}
+                        Closed {formatDateTime(test.endTime)}
                       </p>
                     )}
                   </div>
@@ -125,7 +118,7 @@ export default async function DashboardPage() {
                     </p>
                   </div>
                   <span className="shrink-0 rounded-full bg-success/10 px-3 py-1 text-xs font-semibold text-success">
-                    {s.submittedAt.toLocaleDateString("en-GB")}
+                    {formatDate(s.submittedAt)}
                   </span>
                 </Card>
               </li>
