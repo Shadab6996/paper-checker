@@ -25,6 +25,13 @@ export default async function TestSubmissionsPage({
     studentName: s.student.name,
     submittedAt: s.submittedAt.toISOString(),
     imageUrl: `/api/blob-image?pathname=${encodeURIComponent(s.storagePath)}`,
+    gradeStatus: s.gradeStatus as SubmissionItem["gradeStatus"],
+    aiScore: s.aiScore,
+    aiMaxScore: s.aiMaxScore,
+    aiFeedback: s.aiFeedback as SubmissionItem["aiFeedback"],
+    gradeError: s.gradeError,
+    finalScore: s.finalScore,
+    finalFeedback: s.finalFeedback,
   }));
 
   return (
@@ -44,7 +51,7 @@ export default async function TestSubmissionsPage({
         </Link>
       </div>
 
-      <SubmissionGallery items={items} />
+      <SubmissionGallery items={items} hasAnswerKey={Boolean(test.answerKeyPath)} />
     </div>
   );
 }

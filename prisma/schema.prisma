@@ -52,6 +52,16 @@ model Submission {
   storagePath String
   submittedAt DateTime @default(now())
 
+  gradeStatus   String    @default("ungraded")
+  aiScore       Float?
+  aiMaxScore    Float?
+  aiFeedback    Json?
+  gradeError    String?
+  finalScore    Float?
+  finalFeedback String?
+  gradedAt      DateTime?
+  approvedAt    DateTime?
+
   @@index([testId])
   @@index([studentId])
 }

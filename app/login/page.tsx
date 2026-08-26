@@ -7,7 +7,32 @@ import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ redirect?: string }>;
+}) {
+  const { redirect } = await searchParams;
+  const isTestLink = Boolean(redirect && redirect.startsWith("/test/"));
+
+  if (isTestLink) {
+    return (
+      <main className="flex min-h-dvh flex-col items-center justify-center px-4 py-10 sm:px-6">
+        <div className="w-full max-w-sm">
+          <div className="mb-8 text-center">
+            <h2 className="text-xl font-bold text-foreground">Log in to submit your test</h2>
+          </div>
+          <Card className="p-6">
+            <Suspense fallback={null}>
+              <LoginForm />
+            </Suspense>
+          </Card>
+        </div>
+        <Footer className="mt-10" />
+      </main>
+    );
+  }
+
   const settings = await prisma.settings
     .findUnique({ where: { id: "singleton" } })
     .catch(() => null);
