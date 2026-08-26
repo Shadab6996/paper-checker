@@ -51,7 +51,7 @@ model Submission {
   student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   testId      String
   test        Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
-  storagePath String
+  storagePaths String[]
   submittedAt DateTime @default(now())
 
   gradeStatus   String    @default("ungraded")
@@ -64,6 +64,7 @@ model Submission {
   gradedAt      DateTime?
   approvedAt    DateTime?
 
+  @@unique([studentId, testId])
   @@index([testId])
   @@index([studentId])
 }

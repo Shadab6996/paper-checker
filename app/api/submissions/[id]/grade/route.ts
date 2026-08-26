@@ -28,15 +28,16 @@ export const POST = withErrorHandling(async (
     );
   }
 
-  const [submissionFile, answerKeyFile, questionPaperFile] = await Promise.all([
-    fetchBlobBuffer(submission.storagePath),
+  const [submissionFiles, answerKeyFile, questionPaperFile] = await Promise.all([
+    Promise.all(submission.storagePaths.map((p) => fetchBlobBuffer(p))),
     fetchBlobBuffer(submission.test.answerKeyPath),
     submission.test.questionPaperPath
       ? fetchBlobBuffer(submission.test.questionPaperPath)
       : Promise.resolve(null),
   ]);
 
-  if (!submissionFile || !answerKeyFile) {
+  const missing = submissionFiles.some((f) => !f);
+  if (missing || submissionFiles.length === 0 || !answerKeyFile) {
     return NextResponse.json(
       { error: "Could not read the submission or answer key file" },
       { status: 500 }
@@ -47,7 +48,7 @@ export const POST = withErrorHandling(async (
     const result = await gradeSubmission({
       subject: submission.test.subject,
       chapterName: submission.test.chapterName,
-      submission: submissionFile,
+      submission: submissionFiles as { data: Buffer; contentType: string }[],
       answerKey: answerKeyFile,
       questionPaper: questionPaperFile,
     });

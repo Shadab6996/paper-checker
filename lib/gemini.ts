@@ -43,8 +43,9 @@ function buildPrompt(subject: string, chapterName: string): string {
 Subject: ${subject}
 Chapter: ${chapterName}
 
-You are given the official answer key / marking scheme, and a photo of the student's
-handwritten answer sheet. Read the student's handwriting carefully. For each question in
+You are given the official answer key / marking scheme, and one or more photos of the
+student's handwritten answer sheet (it may span multiple pages/photos — treat them as one
+continuous answer sheet). Read the student's handwriting carefully. For each question in
 the answer key, decide how many marks the student's answer earns out of the marks that
 question is worth, based strictly on the marking scheme. Be fair but accurate — do not
 give credit for blank, illegible, or incorrect answers.
@@ -68,7 +69,7 @@ feedback rather than guessing.`;
 export async function gradeSubmission(params: {
   subject: string;
   chapterName: string;
-  submission: BlobFile;
+  submission: BlobFile[];
   answerKey: BlobFile;
   questionPaper?: BlobFile | null;
 }): Promise<GradeResult> {
@@ -97,13 +98,21 @@ export async function gradeSubmission(params: {
     });
   }
 
-  parts.push({ text: "Student's submitted answer sheet (grade this):" });
   parts.push({
-    inlineData: {
-      mimeType: params.submission.contentType,
-      data: params.submission.data.toString("base64"),
-    },
+    text:
+      params.submission.length > 1
+        ? "Student's submitted answer sheet, in order (grade this — treat all pages as one answer sheet):"
+        : "Student's submitted answer sheet (grade this):",
   });
+  for (const [i, file] of params.submission.entries()) {
+    if (params.submission.length > 1) parts.push({ text: `Page ${i + 1}:` });
+    parts.push({
+      inlineData: {
+        mimeType: file.contentType,
+        data: file.data.toString("base64"),
+      },
+    });
+  }
 
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,

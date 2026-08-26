@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { SubmitTestForm } from "@/components/SubmitTestForm";
+import { StudentSubmissionView } from "@/components/StudentSubmissionView";
 import { LogoutButton } from "@/components/LogoutButton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { getSession } from "@/lib/auth";
@@ -23,9 +24,15 @@ export default async function TestSubmissionPage({
   const session = await getSession();
 
   let wrongSection = false;
-  if (test.section && session?.role === "STUDENT") {
-    const student = await prisma.student.findUnique({ where: { id: session.sub } });
-    wrongSection = !student || student.section !== test.section;
+  let mySubmission: Awaited<ReturnType<typeof prisma.submission.findUnique>> | null = null;
+  if (session?.role === "STUDENT") {
+    if (test.section) {
+      const student = await prisma.student.findUnique({ where: { id: session.sub } });
+      wrongSection = !student || student.section !== test.section;
+    }
+    mySubmission = await prisma.submission.findUnique({
+      where: { studentId_testId: { studentId: session.sub, testId: test.id } },
+    });
   }
 
   return (
@@ -62,6 +69,24 @@ export default async function TestSubmissionPage({
                   Contact your teacher if you think this is a mistake.
                 </p>
               </div>
+            ) : mySubmission ? (
+              <StudentSubmissionView
+                submission={{
+                  imageUrls: mySubmission.storagePaths.map(
+                    (_, i) => `/api/submissions/${mySubmission!.id}/image?index=${i}`
+                  ),
+                  submittedAt: mySubmission.submittedAt.toISOString(),
+                  gradeStatus: mySubmission.gradeStatus as "ungraded" | "graded" | "approved" | "error",
+                  aiScore: mySubmission.aiScore,
+                  aiMaxScore: mySubmission.aiMaxScore,
+                  aiFeedback:
+                    mySubmission.aiFeedback as unknown as
+                      | { questions: { question: string; marksAwarded: number; marksPossible: number; feedback: string }[]; overallFeedback: string }
+                      | null,
+                  finalScore: mySubmission.finalScore,
+                  finalFeedback: mySubmission.finalFeedback,
+                }}
+              />
             ) : (
               <>
                 {status === "live" && <SubmitTestForm testCode={test.code} />}

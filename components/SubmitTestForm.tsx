@@ -2,34 +2,38 @@
 
 import { useState } from "react";
 import { upload } from "@vercel/blob/client";
-import { FileCaptureInput } from "@/components/FileCaptureInput";
+import { FileCaptureInput, type CapturedPhoto } from "@/components/FileCaptureInput";
 import { Button } from "@/components/ui/Button";
 
 type Props = { testCode: string };
 type Status = "idle" | "uploading" | "done";
 
 export function SubmitTestForm({ testCode }: Props) {
-  const [blob, setBlob] = useState<Blob | null>(null);
+  const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [submittedAt, setSubmittedAt] = useState<Date | null>(null);
 
   async function handleTurnIn() {
-    if (!blob) return;
+    if (photos.length === 0) return;
     setError(null);
     setStatus("uploading");
     try {
-      const uploaded = await upload(`${testCode}/${Date.now()}.jpg`, blob, {
-        access: "private",
-        handleUploadUrl: "/api/submissions/upload-url",
-        clientPayload: JSON.stringify({ testCode }),
-        contentType: "image/jpeg",
-      });
+      const storagePaths: string[] = [];
+      for (const [i, photo] of photos.entries()) {
+        const uploaded = await upload(`${testCode}/${Date.now()}-${i}.jpg`, photo.blob, {
+          access: "private",
+          handleUploadUrl: "/api/submissions/upload-url",
+          clientPayload: JSON.stringify({ testCode }),
+          contentType: "image/jpeg",
+        });
+        storagePaths.push(uploaded.pathname);
+      }
 
       const submitRes = await fetch("/api/submissions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ testCode, storagePath: uploaded.pathname }),
+        body: JSON.stringify({ testCode, storagePaths }),
       });
       const submitData = await submitRes.json();
       if (!submitRes.ok) throw new Error(submitData.error ?? "Could not save submission");
@@ -40,13 +44,6 @@ export function SubmitTestForm({ testCode }: Props) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setStatus("idle");
     }
-  }
-
-  function handleSubmitAnother() {
-    setBlob(null);
-    setStatus("idle");
-    setSubmittedAt(null);
-    setError(null);
   }
 
   if (status === "done" && submittedAt) {
@@ -70,17 +67,10 @@ export function SubmitTestForm({ testCode }: Props) {
         <div>
           <p className="font-semibold text-foreground">Turned in</p>
           <p className="text-sm text-muted-foreground">
-            Submitted at{" "}
+            Submitted {photos.length} photo{photos.length === 1 ? "" : "s"} at{" "}
             {submittedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleSubmitAnother}
-          className="mt-2 min-h-11 cursor-pointer text-sm font-semibold text-primary hover:underline"
-        >
-          Submit another photo
-        </button>
       </div>
     );
   }
@@ -89,7 +79,11 @@ export function SubmitTestForm({ testCode }: Props) {
     <div className="flex flex-col gap-5">
       <div>
         <h2 className="mb-2 text-sm font-semibold text-foreground">Your work</h2>
-        <FileCaptureInput onFileReady={setBlob} />
+        <p className="mb-3 text-xs text-muted-foreground">
+          Add one photo per page. Once you turn in, you can&apos;t submit again for this test —
+          make sure every page is included.
+        </p>
+        <FileCaptureInput onPhotosChange={setPhotos} />
       </div>
 
       {error && (
@@ -101,10 +95,12 @@ export function SubmitTestForm({ testCode }: Props) {
       <Button
         type="button"
         onClick={handleTurnIn}
-        disabled={!blob || status === "uploading"}
+        disabled={photos.length === 0 || status === "uploading"}
         className="w-full"
       >
-        {status === "uploading" ? "Turning in…" : "Turn in"}
+        {status === "uploading"
+          ? "Turning in…"
+          : `Turn in${photos.length > 0 ? ` (${photos.length} photo${photos.length === 1 ? "" : "s"})` : ""}`}
       </Button>
     </div>
   );

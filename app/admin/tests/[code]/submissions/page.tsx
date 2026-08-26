@@ -24,7 +24,7 @@ export default async function TestSubmissionsPage({
     id: s.id,
     studentName: s.student.name,
     submittedAt: s.submittedAt.toISOString(),
-    imageUrl: `/api/blob-image?pathname=${encodeURIComponent(s.storagePath)}`,
+    imageUrls: s.storagePaths.map((_, i) => `/api/submissions/${s.id}/image?index=${i}`),
     gradeStatus: s.gradeStatus as SubmissionItem["gradeStatus"],
     aiScore: s.aiScore,
     aiMaxScore: s.aiMaxScore,

@@ -217,6 +217,7 @@ export function SubmissionReviewModal({
   isGrading,
 }: Props) {
   const [manual, setManual] = useState(false);
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -247,13 +248,36 @@ export function SubmissionReviewModal({
           ×
         </button>
 
-        <div className="flex max-h-[40vh] shrink-0 items-center justify-center bg-muted sm:max-h-[85vh] sm:w-1/2">
+        <div className="relative flex max-h-[40vh] shrink-0 flex-col items-center justify-center gap-2 bg-muted sm:max-h-[85vh] sm:w-1/2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={item.imageUrl}
-            alt={`Submission by ${item.studentName}`}
-            className="max-h-[40vh] max-w-full object-contain sm:max-h-[85vh]"
+            src={item.imageUrls[page]}
+            alt={`Page ${page + 1} of submission by ${item.studentName}`}
+            className="max-h-[36vh] max-w-full object-contain sm:max-h-[80vh]"
           />
+          {item.imageUrls.length > 1 && (
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page === 0}
+                className="min-h-8 min-w-8 cursor-pointer rounded-full bg-card px-2 text-sm font-bold text-foreground shadow disabled:opacity-40"
+              >
+                ‹
+              </button>
+              <span className="text-xs font-medium text-muted-foreground">
+                Page {page + 1} of {item.imageUrls.length}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(item.imageUrls.length - 1, p + 1))}
+                disabled={page === item.imageUrls.length - 1}
+                className="min-h-8 min-w-8 cursor-pointer rounded-full bg-card px-2 text-sm font-bold text-foreground shadow disabled:opacity-40"
+              >
+                ›
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex max-h-[85vh] flex-1 flex-col gap-4 overflow-y-auto p-6">

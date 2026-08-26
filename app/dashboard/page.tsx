@@ -31,6 +31,8 @@ export default async function DashboardPage() {
     }),
   ]);
 
+  const submissionByTestId = new Map(submissions.map((s) => [s.testId, s]));
+
   const testsWithStatus = tests
     .map((test) => ({ test, status: getTestStatus(test.startTime, test.endTime) }))
     .sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
@@ -57,45 +59,60 @@ export default async function DashboardPage() {
           </Card>
         ) : (
           <ul className="mb-8 flex flex-col gap-3">
-            {testsWithStatus.map(({ test, status }) => (
-              <li key={test.id}>
-                <Card className="flex items-center justify-between gap-3 p-4">
-                  <div className="min-w-0">
-                    <div className="mb-1 flex items-center gap-2">
-                      <p className="truncate font-semibold text-foreground">{test.name}</p>
-                      <StatusBadge status={status} />
+            {testsWithStatus.map(({ test, status }) => {
+              const submission = submissionByTestId.get(test.id);
+              const canOpen =
+                status === "live" ||
+                (status === "ended" &&
+                  (test.questionPaperShared || test.answerKeyShared || Boolean(submission)));
+
+              return (
+                <li key={test.id}>
+                  <Card className="flex items-center justify-between gap-3 p-4">
+                    <div className="min-w-0">
+                      <div className="mb-1 flex items-center gap-2">
+                        <p className="truncate font-semibold text-foreground">{test.name}</p>
+                        <StatusBadge status={status} />
+                      </div>
+                      <p className="truncate text-sm text-muted-foreground">
+                        {test.subject} · {test.chapterName}
+                      </p>
+                      {status === "upcoming" && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Opens {formatDateTime(test.startTime)}
+                        </p>
+                      )}
+                      {status === "ended" && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Closed {formatDateTime(test.endTime)}
+                        </p>
+                      )}
+                      {submission?.gradeStatus === "approved" && (
+                        <p className="mt-1 text-xs font-semibold text-success">
+                          Grade: {submission.finalScore}
+                          {submission.aiMaxScore != null ? ` / ${submission.aiMaxScore}` : ""}
+                        </p>
+                      )}
+                      {submission && submission.gradeStatus !== "approved" && (
+                        <p className="mt-1 text-xs text-muted-foreground">Submitted</p>
+                      )}
                     </div>
-                    <p className="truncate text-sm text-muted-foreground">
-                      {test.subject} · {test.chapterName}
-                    </p>
-                    {status === "upcoming" && (
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Opens {formatDateTime(test.startTime)}
-                      </p>
+                    {canOpen ? (
+                      <Link
+                        href={`/test/${test.code}`}
+                        className="shrink-0 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary hover:bg-primary-hover"
+                      >
+                        {status === "live" && !submission ? "Open" : "View"}
+                      </Link>
+                    ) : (
+                      <span className="shrink-0 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground">
+                        {status === "upcoming" ? "Not open" : "Closed"}
+                      </span>
                     )}
-                    {status === "ended" && (
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Closed {formatDateTime(test.endTime)}
-                      </p>
-                    )}
-                  </div>
-                  {status === "live" ||
-                  (status === "ended" &&
-                    (test.questionPaperShared || test.answerKeyShared)) ? (
-                    <Link
-                      href={`/test/${test.code}`}
-                      className="shrink-0 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary hover:bg-primary-hover"
-                    >
-                      {status === "live" ? "Open" : "View"}
-                    </Link>
-                  ) : (
-                    <span className="shrink-0 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground">
-                      {status === "upcoming" ? "Not open" : "Closed"}
-                    </span>
-                  )}
-                </Card>
-              </li>
-            ))}
+                  </Card>
+                </li>
+              );
+            })}
           </ul>
         )}
 
@@ -110,17 +127,21 @@ export default async function DashboardPage() {
           <ul className="flex flex-col gap-3">
             {submissions.map((s) => (
               <li key={s.id}>
-                <Card className="flex items-center justify-between gap-3 p-4">
-                  <div>
-                    <p className="font-semibold text-foreground">{s.test.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {s.test.subject} · {s.test.chapterName}
-                    </p>
-                  </div>
-                  <span className="shrink-0 rounded-full bg-success/10 px-3 py-1 text-xs font-semibold text-success">
-                    {formatDate(s.submittedAt)}
-                  </span>
-                </Card>
+                <Link href={`/test/${s.test.code}`}>
+                  <Card className="flex items-center justify-between gap-3 p-4 transition-colors hover:bg-muted">
+                    <div>
+                      <p className="font-semibold text-foreground">{s.test.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {s.test.subject} · {s.test.chapterName}
+                      </p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-success/10 px-3 py-1 text-xs font-semibold text-success">
+                      {s.gradeStatus === "approved"
+                        ? `Grade: ${s.finalScore}${s.aiMaxScore != null ? ` / ${s.aiMaxScore}` : ""}`
+                        : formatDate(s.submittedAt)}
+                    </span>
+                  </Card>
+                </Link>
               </li>
             ))}
           </ul>

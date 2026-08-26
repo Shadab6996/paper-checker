@@ -18,11 +18,9 @@ export const DELETE = withErrorHandling(async (
   });
   if (!student) return NextResponse.json({ error: "Student not found" }, { status: 404 });
 
-  if (student.submissions.length > 0) {
-    await del(
-      student.submissions.map((s) => s.storagePath),
-      { token: process.env.BLOB_READ_WRITE_TOKEN }
-    ).catch(() => null);
+  const paths = student.submissions.flatMap((s) => s.storagePaths);
+  if (paths.length > 0) {
+    await del(paths, { token: process.env.BLOB_READ_WRITE_TOKEN }).catch(() => null);
   }
 
   await prisma.student.delete({ where: { id } });

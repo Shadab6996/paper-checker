@@ -19,7 +19,7 @@ export const DELETE = withErrorHandling(async (
   if (!test) return NextResponse.json({ error: "Test not found" }, { status: 404 });
 
   const paths = [
-    ...test.submissions.map((s) => s.storagePath),
+    ...test.submissions.flatMap((s) => s.storagePaths),
     test.questionPaperPath,
     test.answerKeyPath,
   ].filter((p): p is string => Boolean(p));

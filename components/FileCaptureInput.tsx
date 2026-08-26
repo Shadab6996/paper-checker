@@ -3,94 +3,97 @@
 import { useRef, useState } from "react";
 import { compressImage } from "@/lib/imageCompression";
 
+export type CapturedPhoto = { id: string; blob: Blob; previewUrl: string };
+
 type Props = {
-  onFileReady: (blob: Blob | null) => void;
+  onPhotosChange: (photos: CapturedPhoto[]) => void;
+  maxPhotos?: number;
 };
 
-export function FileCaptureInput({ onFileReady }: Props) {
+export function FileCaptureInput({ onPhotosChange, maxPhotos = 10 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
     setError(null);
     setProcessing(true);
     try {
-      const blob = await compressImage(file);
-      setPreviewUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return URL.createObjectURL(blob);
+      const remaining = maxPhotos - photos.length;
+      const toProcess = files.slice(0, Math.max(0, remaining));
+      const newPhotos: CapturedPhoto[] = [];
+      for (const file of toProcess) {
+        const blob = await compressImage(file);
+        newPhotos.push({
+          id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          blob,
+          previewUrl: URL.createObjectURL(blob),
+        });
+      }
+      setPhotos((prev) => {
+        const next = [...prev, ...newPhotos];
+        onPhotosChange(next);
+        return next;
       });
-      onFileReady(blob);
+      if (files.length > toProcess.length) {
+        setError(`Only added ${toProcess.length} — max ${maxPhotos} photos per submission.`);
+      }
     } catch {
-      setError("Couldn't read that photo — try again.");
-      onFileReady(null);
+      setError("Couldn't read one of those photos — try again.");
     } finally {
       setProcessing(false);
+      if (inputRef.current) inputRef.current.value = "";
     }
   }
 
-  function handleRemove() {
-    setPreviewUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return null;
+  function handleRemove(id: string) {
+    setPhotos((prev) => {
+      const target = prev.find((p) => p.id === id);
+      if (target) URL.revokeObjectURL(target.previewUrl);
+      const next = prev.filter((p) => p.id !== id);
+      onPhotosChange(next);
+      return next;
     });
-    onFileReady(null);
-    if (inputRef.current) inputRef.current.value = "";
-  }
-
-  if (previewUrl) {
-    return (
-      <div className="flex flex-col gap-3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={previewUrl}
-          alt="Preview of your answer sheet photo"
-          className="max-h-96 w-full rounded-2xl border border-border object-contain bg-muted"
-        />
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            className="min-h-11 flex-1 cursor-pointer rounded-xl border border-border bg-card px-4 text-sm font-semibold text-foreground hover:bg-muted"
-          >
-            Retake / choose another
-          </button>
-          <button
-            type="button"
-            onClick={handleRemove}
-            className="min-h-11 cursor-pointer rounded-xl border border-border bg-card px-4 text-sm font-semibold text-destructive hover:bg-muted"
-          >
-            Remove
-          </button>
-        </div>
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handleChange}
-          className="hidden"
-        />
-      </div>
-    );
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
+      {photos.length > 0 && (
+        <div className="grid grid-cols-3 gap-3">
+          {photos.map((photo, i) => (
+            <div key={photo.id} className="relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={photo.previewUrl}
+                alt={`Page ${i + 1} of your answer sheet`}
+                className="aspect-[3/4] w-full rounded-xl border border-border bg-muted object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => handleRemove(photo.id)}
+                aria-label={`Remove page ${i + 1}`}
+                className="absolute -right-2 -top-2 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-destructive text-sm font-bold text-white shadow"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        disabled={processing}
-        className="flex min-h-40 w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-muted/50 px-4 py-8 text-center transition-colors hover:bg-muted disabled:cursor-not-allowed"
+        disabled={processing || photos.length >= maxPhotos}
+        className="flex min-h-32 w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-muted/50 px-4 py-6 text-center transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
       >
         <svg
           aria-hidden="true"
-          width="32"
-          height="32"
+          width="28"
+          height="28"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -103,10 +106,16 @@ export function FileCaptureInput({ onFileReady }: Props) {
           <circle cx="12" cy="12.5" r="3.5" />
         </svg>
         <span className="text-sm font-semibold text-foreground">
-          {processing ? "Processing…" : "Take or upload a photo"}
+          {processing
+            ? "Processing…"
+            : photos.length > 0
+              ? "Add another page"
+              : "Take or choose photos"}
         </span>
         <span className="text-xs text-muted-foreground">
-          Make sure your answers are clear and well-lit
+          {photos.length > 0
+            ? `${photos.length} of ${maxPhotos} pages added`
+            : "Camera or gallery — add one photo per page"}
         </span>
       </button>
       {error && (
@@ -118,7 +127,7 @@ export function FileCaptureInput({ onFileReady }: Props) {
         ref={inputRef}
         type="file"
         accept="image/*"
-        capture="environment"
+        multiple
         onChange={handleChange}
         className="hidden"
       />

@@ -12,7 +12,7 @@ export type SubmissionItem = {
   id: string;
   studentName: string;
   submittedAt: string;
-  imageUrl: string;
+  imageUrls: string[];
   gradeStatus: GradeStatus;
   aiScore: number | null;
   aiMaxScore: number | null;
@@ -187,14 +187,19 @@ export function SubmissionGallery({
                   className="h-4 w-4 cursor-pointer"
                 />
               </label>
-              <button type="button" onClick={() => setActiveId(item.id)} className="cursor-pointer">
+              <button type="button" onClick={() => setActiveId(item.id)} className="relative cursor-pointer">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={item.imageUrl}
+                  src={item.imageUrls[0]}
                   alt={`Submission by ${item.studentName}`}
                   loading="lazy"
                   className="aspect-[3/4] w-full bg-muted object-cover"
                 />
+                {item.imageUrls.length > 1 && (
+                  <span className="absolute bottom-2 right-2 rounded-full bg-foreground/80 px-2 py-0.5 text-xs font-semibold text-white">
+                    {item.imageUrls.length} pages
+                  </span>
+                )}
                 <div className="flex flex-col gap-1 p-3">
                   <p className="truncate text-sm font-semibold text-foreground">
                     {item.studentName}
