@@ -42,6 +42,8 @@ model Settings {
   id        String   @id @default("singleton")
   heroNames String[] @default([])
   heroQuote String   @default("The best answer sheet is the one that actually gets submitted.")
+  aiProvider String  @default("gemini")
+  aiModel    String?
   updatedAt DateTime @updatedAt
 }
 

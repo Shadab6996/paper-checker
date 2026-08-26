@@ -3,15 +3,20 @@ import { prisma } from "@/lib/db";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { AiGradingSettings } from "@/components/admin/AiGradingSettings";
 import { getTestStatus } from "@/lib/testStatus";
+import type { AiProvider } from "@/lib/ai/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminTestsPage() {
-  const tests = await prisma.test.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { _count: { select: { submissions: true } } },
-  });
+  const [tests, settings] = await Promise.all([
+    prisma.test.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { _count: { select: { submissions: true } } },
+    }),
+    prisma.settings.findUnique({ where: { id: "singleton" } }),
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -26,6 +31,11 @@ export default async function AdminTestsPage() {
           <Button>New test</Button>
         </Link>
       </div>
+
+      <AiGradingSettings
+        initialProvider={(settings?.aiProvider ?? "gemini") as AiProvider}
+        initialModel={settings?.aiModel ?? null}
+      />
 
       {tests.length === 0 ? (
         <Card className="flex flex-col items-center gap-2 p-10 text-center">

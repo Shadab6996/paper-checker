@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 import { withErrorHandling } from "@/lib/apiHandler";
 import { fetchBlobBuffer } from "@/lib/blob";
-import { gradeSubmission } from "@/lib/gemini";
+import { gradeWithProvider, type AiProvider } from "@/lib/ai";
 
 export const maxDuration = 60;
 
@@ -44,13 +44,17 @@ export const POST = withErrorHandling(async (
     );
   }
 
+  const settings = await prisma.settings.findUnique({ where: { id: "singleton" } });
+  const provider = (settings?.aiProvider ?? "gemini") as AiProvider;
+
   try {
-    const result = await gradeSubmission({
+    const result = await gradeWithProvider(provider, {
       subject: submission.test.subject,
       chapterName: submission.test.chapterName,
       submission: submissionFiles as { data: Buffer; contentType: string }[],
       answerKey: answerKeyFile,
       questionPaper: questionPaperFile,
+      model: settings?.aiModel,
     });
 
     const updated = await prisma.submission.update({

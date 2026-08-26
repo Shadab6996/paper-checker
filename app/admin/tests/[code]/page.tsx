@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/Button";
 import { CopyLinkBox } from "@/components/admin/CopyLinkBox";
 import { TestDocuments } from "@/components/admin/TestDocuments";
 import { DeleteTestButton } from "@/components/admin/DeleteTestButton";
+import { EditTestTiming } from "@/components/admin/EditTestTiming";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { getTestStatus } from "@/lib/testStatus";
-import { formatDateTime } from "@/lib/formatDate";
 
 export const dynamic = "force-dynamic";
 
@@ -39,11 +39,11 @@ export default async function TestDetailPage({
           {test.subject} · {test.chapterName}
           {test.section && ` · Section ${test.section}`}
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Opens {formatDateTime(test.startTime)}
-          {" · "}
-          Closes {formatDateTime(test.endTime)}
-        </p>
+        <EditTestTiming
+          testCode={test.code}
+          initialStartTime={test.startTime.toISOString()}
+          initialEndTime={test.endTime.toISOString()}
+        />
       </div>
 
       <Card className="flex flex-col gap-3 p-6">
