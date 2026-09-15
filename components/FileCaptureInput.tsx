@@ -10,7 +10,7 @@ type Props = {
   maxPhotos?: number;
 };
 
-export function FileCaptureInput({ onPhotosChange, maxPhotos = 10 }: Props) {
+export function FileCaptureInput({ onPhotosChange, maxPhotos = 20 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
   const [processing, setProcessing] = useState(false);

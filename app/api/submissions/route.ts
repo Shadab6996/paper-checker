@@ -8,7 +8,7 @@ import { getTestStatus } from "@/lib/testStatus";
 
 const bodySchema = z.object({
   testCode: z.string().min(1),
-  storagePaths: z.array(z.string().min(1)).min(1).max(10),
+  storagePaths: z.array(z.string().min(1)).min(1).max(20),
 });
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
