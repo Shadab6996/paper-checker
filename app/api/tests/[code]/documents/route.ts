@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { del } from "@vercel/blob";
+import { del, put } from "@vercel/blob";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 import { withErrorHandling } from "@/lib/apiHandler";
+import { fetchBlobBuffer } from "@/lib/blob";
+import { stripPdfEncryption } from "@/lib/pdf";
 
 const bodySchema = z.object({
   kind: z.enum(["questionPaper", "answerKey"]),
@@ -30,6 +32,35 @@ export const POST = withErrorHandling(async (
   const expectedPrefix = `documents/${test.code}/`;
   if (!storagePath.startsWith(expectedPrefix)) {
     return NextResponse.json({ error: "Invalid upload path" }, { status: 400 });
+  }
+
+  // Many exam-bank PDFs carry print/copy-restriction encryption that Gemini's
+  // document ingestion rejects outright, even though the file opens fine in any
+  // viewer. Strip that restriction layer right after upload so grading later
+  // never trips over it. A file that needs a real (unknown) password can't be
+  // fixed here — reject it now with a clear message instead of failing later
+  // at grading time with a cryptic error.
+  const uploaded = await fetchBlobBuffer(storagePath);
+  if (uploaded?.contentType === "application/pdf") {
+    const cleaned = await stripPdfEncryption(uploaded.data);
+    if (!cleaned) {
+      await del(storagePath, { token: process.env.BLOB_READ_WRITE_TOKEN }).catch(() => null);
+      return NextResponse.json(
+        {
+          error:
+            "This PDF is password-protected and can't be used for AI grading. Re-save/print it without a password, or upload photos of each page instead.",
+        },
+        { status: 400 }
+      );
+    }
+    if (!cleaned.equals(uploaded.data)) {
+      await put(storagePath, cleaned, {
+        access: "private",
+        contentType: "application/pdf",
+        allowOverwrite: true,
+        token: process.env.BLOB_READ_WRITE_TOKEN,
+      });
+    }
   }
 
   const field = kind === "questionPaper" ? "questionPaperPath" : "answerKeyPath";
