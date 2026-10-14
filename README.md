@@ -14,6 +14,30 @@ vision-capable LLM, review the result, and release scores — all from one web a
   <img alt="Vercel" src="https://img.shields.io/badge/Deployed-Vercel-000000?logo=vercel&logoColor=white">
 </p>
 
+**Live demo:** <https://paper-checker-dun.vercel.app>
+
+---
+
+## Screenshots
+
+> Student names and handwriting in these screenshots are anonymised — the app is in
+> real use by a school class.
+
+| AI review — the core of the app |
+| --- |
+| ![AI review modal](docs/screenshots/ai-review.png) |
+| *The model's grade and per-question feedback, shown beside the answer sheet. The teacher can override the score before approving, and nothing reaches the student until they do.* |
+
+| Submission gallery | Test management |
+| --- | --- |
+| ![Submission gallery](docs/screenshots/submissions-gallery.png) | ![Admin tests list](docs/screenshots/admin-tests.png) |
+| *Every submission for a test, with grade status at a glance. Select any subset and grade them in one batch.* | *All tests with submission counts and share codes, plus the instance-wide AI model selector.* |
+
+| Test detail | Student login |
+| --- | --- |
+| ![Test detail](docs/screenshots/test-detail.png) | ![Login page](docs/screenshots/login.png) |
+| *One shareable link per test, an editable time window, and question-paper / answer-key uploads with independent share toggles.* | *The landing page, with a Three.js scene rendered via react-three-fiber.* |
+
 ---
 
 ## The problem
