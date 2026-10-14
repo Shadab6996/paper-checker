@@ -12,8 +12,6 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // Third-party Claude Code skill scripts, not app code
-    ".claude/**",
     // Separate sibling project (its own repo), not part of this app
     "study streak/**",
   ]),

@@ -39,9 +39,6 @@ yarn-error.log*
 # local MCP config (contains API keys)
 .mcp.json
 
-# Claude Code local skill tooling, not app source
-.claude/
-
 # Separate sibling project (its own git repo), not part of this app
 /study streak/
 
